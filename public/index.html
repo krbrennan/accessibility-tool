@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accessibility Audit Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main {
+            padding: 40px 30px;
+        }
+
+        .form-group {
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        input[type="url"] {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="url"]:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            padding: 16px 32px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .status {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .status.running {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .status.completed {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #34d399;
+        }
+
+        .status.failed {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #f87171;
+        }
+
+        .progress {
+            margin-top: 20px;
+        }
+
+        .progress-bar {
+            background: #e5e7eb;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .results {
+            margin-top: 30px;
+            padding: 25px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background: #f9fafb;
+        }
+
+        .score-display {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .score-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .score-good { background: #10b981; }
+        .score-ok { background: #f59e0b; }
+        .score-poor { background: #ef4444; }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .report-link {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .report-link a {
+            background: #4f46e5;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            display: inline-block;
+            transition: background 0.3s ease;
+        }
+
+        .report-link a:hover {
+            background: #3730a3;
+        }
+
+        .loading-spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #4f46e5;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>♿ Accessibility Audit Tool</h1>
+            <p>Comprehensive accessibility testing powered by Google Lighthouse</p>
+        </div>
+        
+        <div class="main">
+            <form id="auditForm">
+                <div class="form-group">
+                    <label for="url">Website URL to Audit</label>
+                    <input 
+                        type="url" 
+                        id="url" 
+                        name="url" 
+                        placeholder="https://example.com" 
+                        required
+                    >
+                </div>
+                
+                <button type="submit" class="btn" id="submitBtn">
+                    Start Accessibility Audit
+                </button>
+            </form>
+            
+            <div id="status" class="status" style="display: none;"></div>
+            <div id="results" class="results" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('auditForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const statusDiv = document.getElementById('status');
+        const resultsDiv = document.getElementById('results');
+        let currentAuditId = null;
+        let pollInterval = null;
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const url = document.getElementById('url').value;
+            if (!url) return;
+
+            // Reset UI
+            statusDiv.style.display = 'none';
+            resultsDiv.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading-spinner"></span>Starting audit...';
+
+            try {
+                // Start audit
+                const response = await fetch('/audit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url })
+                });
+
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to start audit');
+                }
+
+                currentAuditId = data.auditId;
+                showStatus('running', 'Audit in progress... This may take 30-60 seconds.');
+                
+                // Start polling for results
+                pollForResults();
+
+            } catch (error) {
+                showStatus('failed', `Error: ${error.message}`);
+                resetUI();
+            }
+        });
+
+        function pollForResults() {
+            if (!currentAuditId) return;
+
+            pollInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/audit/${currentAuditId}`);
+                    const data = await response.json();
+
+                    if (data.status === 'completed') {
+                        clearInterval(pollInterval);
+                        showResults(data.result);
+                        resetUI();
+                    } else if (data.status === 'failed') {
+                        clearInterval(pollInterval);
+                        showStatus('failed', `Audit failed: ${data.error || 'Unknown error'}`);
+                        resetUI();
+                    }
+                } catch (error) {
+                    clearInterval(pollInterval);
+                    showStatus('failed', `Error checking results: ${error.message}`);
+                    resetUI();
+                }
+            }, 2000);
+        }
+
+        function showStatus(type, message) {
+            statusDiv.className = `status ${type}`;
+            statusDiv.innerHTML = type === 'running' ? 
+                `<div class="loading-spinner"></div>${message}<div class="progress"><div class="progress-bar"><div class="progress-fill" style="width: 70%;"></div></div></div>` : 
+                message;
+            statusDiv.style.display = 'block';
+        }
+
+        function showResults(result) {
+            const { url, overallScore, summary } = result;
+            
+            let scoreClass = 'score-poor';
+            if (overallScore >= 90) scoreClass = 'score-good';
+            else if (overallScore >= 50) scoreClass = 'score-ok';
+
+            resultsDiv.innerHTML = `
+                <div class="score-display">
+                    <div class="score-circle ${scoreClass}">
+                        ${overallScore}
+                    </div>
+                    <div><strong>Accessibility Score</strong></div>
+                    <div style="color: #6b7280; font-size: 14px; margin-top: 5px;">${url}</div>
+                </div>
+                
+                <div class="summary-stats">
+                    <div class="stat-item">
+                        <div class="stat-number" style="color: #10b981;">${summary.passed}</div>
+                        <div class="stat-label">Passed</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" style="color: #ef4444;">${summary.failed}</div>
+                        <div class="stat-label">Failed</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" style="color: #f59e0b;">${summary.manual}</div>
+                        <div class="stat-label">Manual Review</div>
+                    </div>
+                </div>
+                
+                <div class="report-link">
+                    <a href="/report/${currentAuditId}" target="_blank">
+                        View Detailed Report →
+                    </a>
+                </div>
+            `;
+            
+            resultsDiv.style.display = 'block';
+            showStatus('completed', '✅ Audit completed successfully!');
+        }
+
+        function resetUI() {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Start Accessibility Audit';
+        }
+
+        // Clear any ongoing polls when page unloads
+        window.addEventListener('beforeunload', () => {
+            if (pollInterval) {
+                clearInterval(pollInterval);
+            }
+        });
+    </script>
+</body>
+</html>
