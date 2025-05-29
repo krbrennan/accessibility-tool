@@ -404,9 +404,11 @@ function generateAccessibilityReport(auditResult) {
   `;
 }
 
-app.listen(PORT, () => {
-  console.log(`Accessibility Audit Server running on port ${PORT}`);
-  console.log(`Visit http://localhost:${PORT} to start auditing websites`);
-});
+// app.listen(PORT, () => {
+//   console.log(`Accessibility Audit Server running on port ${PORT}`);
+//   console.log(`Visit http://localhost:${PORT} to start auditing websites`);
+// });
+
+app.listen(3000, '0.0.0.0')
 
 module.exports = app;
